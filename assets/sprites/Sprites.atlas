@@ -1,0 +1,90 @@
+
+Sprites.png
+size: 32,128
+format: RGBA8888
+filter: Nearest,Nearest
+repeat: none
+Gun
+  rotate: false
+  xy: 2, 2
+  size: 20, 10
+  orig: 20, 10
+  offset: 0, 0
+  index: -1
+Player
+  rotate: false
+  xy: 2, 48
+  size: 16, 32
+  orig: 16, 32
+  offset: 0, 0
+  index: 10
+Player
+  rotate: false
+  xy: 2, 48
+  size: 16, 32
+  orig: 16, 32
+  offset: 0, 0
+  index: 9
+Player
+  rotate: false
+  xy: 2, 48
+  size: 16, 32
+  orig: 16, 32
+  offset: 0, 0
+  index: 11
+Player
+  rotate: false
+  xy: 2, 14
+  size: 16, 32
+  orig: 16, 32
+  offset: 0, 0
+  index: 1
+Player
+  rotate: false
+  xy: 2, 14
+  size: 16, 32
+  orig: 16, 32
+  offset: 0, 0
+  index: 3
+Player
+  rotate: false
+  xy: 2, 14
+  size: 16, 32
+  orig: 16, 32
+  offset: 0, 0
+  index: 2
+Player
+  rotate: false
+  xy: 2, 14
+  size: 16, 32
+  orig: 16, 32
+  offset: 0, 0
+  index: 6
+Player
+  rotate: false
+  xy: 2, 14
+  size: 16, 32
+  orig: 16, 32
+  offset: 0, 0
+  index: 4
+Player
+  rotate: false
+  xy: 2, 14
+  size: 16, 32
+  orig: 16, 32
+  offset: 0, 0
+  index: 8
+Player
+  rotate: false
+  xy: 2, 14
+  size: 16, 32
+  orig: 16, 32
+  offset: 0, 0
+  index: 7
+Player
+  rotate: false
+  xy: 2, 14
+  size: 16, 32
+  orig: 16, 32
+  offset: 0, 0
+  index: 5

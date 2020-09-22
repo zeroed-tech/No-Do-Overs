@@ -1,0 +1,13 @@
+targetCompatibility = JavaVersion.VERSION_1_9
+sourceCompatibility = JavaVersion.VERSION_1_9
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+eclipse.project.name = appName + '-core'
+
+dependencies {
+	api "com.badlogicgames.gdx:gdx:$gdxVersion"
+	api "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
+	compile "com.kotcrab.vis:vis-ui:$visuiVersion"
+	api 'com.github.tommyettinger:jbump:master-SNAPSHOT'
+	implementation "space.earlygrey:shapedrawer:$shapedrawerVersion"
+	api 'com.github.tommyettinger:formic:0.1.4'
+}
