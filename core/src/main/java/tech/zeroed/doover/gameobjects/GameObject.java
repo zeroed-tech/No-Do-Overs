@@ -29,6 +29,8 @@ public abstract class GameObject {
     public float gravityX;
     public float gravityY;
 
+    public boolean dead = false;
+
     public Item<GameObject> item;
 
     /**

@@ -1,12 +1,14 @@
 package tech.zeroed.doover.gameobjects;
 
-import com.dongbat.jbump.CollisionFilter;
-import com.dongbat.jbump.Item;
-import com.dongbat.jbump.Rect;
-import com.dongbat.jbump.Response;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Array;
+import com.dongbat.jbump.*;
 import tech.zeroed.doover.GameWorld;
 
 public class Bullet extends GameObject {
+    public static Array<TextureRegion> sprites = new Array<>();
 
     private static BulletCollisionFilter BULLET_COLLISION_FILTER = new BulletCollisionFilter();
 
@@ -14,25 +16,39 @@ public class Bullet extends GameObject {
 
     public Bullet(float ttl){
         this.ttl = ttl;
-        this.boundingBoxWidth = 5;
-        this.boundingBoxHeight = 5;
+
         this.boundingBoxX = 0;
         this.boundingBoxY = 0;
         this.gravityX = 0;
         this.gravityY = 0;
+
+        this.sprite = sprites.random();
+        this.boundingBoxWidth = MathUtils.random(3,5);
+        this.boundingBoxHeight = boundingBoxWidth;
 
         item = new Item<>(this);
     }
 
     @Override
     public void run(float delta) {
+        if(dead)
+            return;
         ttl -= delta;
 
         if(ttl > 0) {
             x += deltaX * delta;
             y += deltaY * delta;
 
-            GameWorld.world.move(item, x + boundingBoxX, y + boundingBoxY, BULLET_COLLISION_FILTER);
+            Response.Result result = GameWorld.world.move(item, x + boundingBoxX, y + boundingBoxY, BULLET_COLLISION_FILTER);
+            if(result.projectedCollisions.size() > 0){
+                for(Item item : result.projectedCollisions.others){
+                    if(item.userData instanceof Ground){
+                        GameWorld.removeGameObjectFromWorld(this);
+                        dead = true;
+                        return;
+                    }
+                }
+            }
 
             // Update position based on collision results
             Rect rect = GameWorld.world.getRect(item);
@@ -45,9 +61,17 @@ public class Bullet extends GameObject {
         }
     }
 
+    @Override
+    public void draw(SpriteBatch batch) {
+        batch.draw(sprite, x, y, boundingBoxWidth / 2f, boundingBoxHeight / 2f, boundingBoxWidth, boundingBoxHeight, 1, 1, rotation);
+    }
+
     public static class BulletCollisionFilter implements CollisionFilter{
         @Override
         public Response filter(Item item, Item other) {
+            if(other.userData instanceof Ground){
+                return Response.slide;
+            }
             return null;
         }
     }

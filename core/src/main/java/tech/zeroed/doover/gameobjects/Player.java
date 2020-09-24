@@ -9,24 +9,22 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.MathUtils;
 import com.dongbat.jbump.*;
 import tech.zeroed.doover.GameWorld;
+import tech.zeroed.doover.gameobjects.traps.Traps;
 import text.formic.Stringf;
 
-import static tech.zeroed.doover.GameWorld.hudCamera;
-import static tech.zeroed.doover.GameWorld.worldSprites;
+import static tech.zeroed.doover.GameWorld.*;
 
 public class Player extends GameObject{
 
     public static PlayerCollisionFilter PLAYER_COLLISION_FILTER = new PlayerCollisionFilter();
 
-
-
     // Player constants
     public static float ACCELERATION = 1800f;
-    public static float RUN_SPEED = 500f;
-    public static float JUMP_SPEED = 950;
-    public static float GRAVITY = 3000f;
+    public static float RUN_SPEED = 300f;
+    public static float JUMP_SPEED = 600;
+    public static float GRAVITY = 2000f;
 
-    public static float SHOTGUN_KNOCK_BACK = 1000f;
+    public static float SHOTGUN_KNOCK_BACK = 700f;
     public static float SHOTGUN_RELOAD_RATE = 0.6f;
 
     public static float TERMINAL_VELOCITY = 900;
@@ -38,14 +36,13 @@ public class Player extends GameObject{
 
     private float gunReloadDelay = 0;
 
-
     public Player(){
         animation = new Animation<>(1 / 30f, worldSprites.findRegions("Player"), Animation.PlayMode.LOOP);
         sprite = worldSprites.findRegion("Gun");
         animationTime = 1;
-        this.boundingBoxWidth = 15;
-        this.boundingBoxHeight = 30;
-        this.boundingBoxX = 0;
+        this.boundingBoxWidth = 10;
+        this.boundingBoxHeight = 19;
+        this.boundingBoxX = 3;
         this.boundingBoxY = 0;
         this.gravityX = 0;
         this.gravityY = -GRAVITY;
@@ -53,18 +50,44 @@ public class Player extends GameObject{
         item = new Item<>(this);
     }
 
+    public void kill(){
+        if(dead) return;
+        dead = true;
+        GameWorld.removeGameObjectFromWorld(this);
+
+        for(int i = 0; i < 100; i++){
+            BloodParticle particle = new BloodParticle();
+            particle.x = MathUtils.random(x, x+boundingBoxWidth);
+            particle.y = MathUtils.random(y, y+boundingBoxHeight);;
+            particle.deltaX = MathUtils.random(-20, 20);
+            particle.deltaY = MathUtils.random(100, 250);
+            addGameObjectToWorld(particle);
+        }
+
+        level.spawnPlayer();
+    }
+
     @Override
     public void run(float delta) {
+        if(dead) return;
 
         animationTime += delta;
         gunReloadDelay -= delta;
+        if(gunReloadDelay < 0)
+            gunReloadDelay = 0;
 
         boolean left  = Gdx.input.isKeyPressed(Input.Keys.LEFT);
         boolean right = Gdx.input.isKeyPressed(Input.Keys.RIGHT);
         boolean up    = Gdx.input.isKeyPressed(Input.Keys.UP);
         boolean down  = Gdx.input.isKeyPressed(Input.Keys.DOWN);
         boolean jump  = Gdx.input.isKeyPressed(Input.Keys.Z);
-        boolean shoot = Gdx.input.isKeyJustPressed(Input.Keys.SPACE);
+        boolean shoot = Gdx.input.isKeyPressed(Input.Keys.SPACE);
+
+        boolean killSwitch = Gdx.input.isKeyJustPressed(Input.Keys.GRAVE);
+
+        if(killSwitch) {
+            kill();
+        }
 
         if(right || left){
             // An arrow key is being pressed
@@ -117,7 +140,7 @@ public class Player extends GameObject{
                     }else{
                         bullet.x = x + boundingBoxWidth * 2;
                     }
-                    bullet.y = y + boundingBoxHeight/2+5;
+                    bullet.y = y + boundingBoxHeight/2-2;
                 }
                 GameWorld.addGameObjectToWorld(bullet);
             }
@@ -165,6 +188,8 @@ public class Player extends GameObject{
                         inAir = false;
                     }
                 }
+            }else if(other instanceof Traps){
+                kill();
             }
         }
 
@@ -178,14 +203,15 @@ public class Player extends GameObject{
         if(y < -100)
             y = 1000;
 
-        GameWorld.camera.position.set(x, y, 0);
+
+        GameWorld.lookAt(x, y);
     }
 
     @Override
     public void draw(SpriteBatch batch) {
         TextureAtlas.AtlasRegion region = animation.getKeyFrame(animationTime);
         batch.draw(region, x, y, region.getRegionWidth() / 2f, region.getRegionHeight() / 2f, region.getRegionWidth(), region.getRegionHeight(), flipX ? -1 : 1, flipY ? -1 : 1, rotation);
-        batch.draw(sprite, x+(region.getRegionHeight()/2f * (flipX ? -1 : 1)), y+boundingBoxHeight/2, sprite.getRegionWidth() / 2f, sprite.getRegionHeight() / 2f, sprite.getRegionWidth(), sprite.getRegionHeight(), flipX ? -1 : 1, flipY ? -1 : 1, MathUtils.clamp(360*(gunReloadDelay/SHOTGUN_RELOAD_RATE), 0, 360));
+        batch.draw(sprite, x+(region.getRegionWidth()/2f * (flipX ? -1 : 1)), y+boundingBoxHeight/8, sprite.getRegionWidth() / 2f, sprite.getRegionHeight() / 2f, sprite.getRegionWidth(), sprite.getRegionHeight(), flipX ? -1 : 1, flipY ? -1 : 1, MathUtils.clamp(360*(gunReloadDelay/SHOTGUN_RELOAD_RATE), 0, 360));
     }
 
     @Override
@@ -208,6 +234,9 @@ public class Player extends GameObject{
         public Response filter(Item item, Item other) {
             if(other.userData instanceof Crate || other.userData instanceof Ground){
                 return Response.slide;
+            }
+            if(other.userData instanceof Traps){
+                return Response.cross;
             }
             return null;
         }

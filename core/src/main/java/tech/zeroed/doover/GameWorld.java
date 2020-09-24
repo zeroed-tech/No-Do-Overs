@@ -12,6 +12,7 @@ import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.SnapshotArray;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
 import com.dongbat.jbump.Item;
@@ -26,6 +27,10 @@ public class GameWorld {
 
     public static TextureAtlas worldSprites;
     public static SnapshotArray<GameObject> gameObjects;
+
+    public static Array<GameObject> removeAfterUpdate;
+    public static Array<GameObject> addAfterUpdate;
+
     public static World<GameObject> world;
     public static SpriteBatch spriteBatch;
     public static OrthographicCamera camera;
@@ -34,10 +39,14 @@ public class GameWorld {
     public static ShapeDrawer shapeDrawer;
     public static BitmapFont font;
 
+    public static Level level;
+
     public GameWorld() {
         worldSprites = new TextureAtlas(Gdx.files.internal("sprites/Sprites.atlas"));
         world = new World<>(TILE_SIZE);
         gameObjects = new SnapshotArray<>();
+        removeAfterUpdate = new Array<>();
+        addAfterUpdate = new Array<>();
 
         Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         pixmap.setColor(Color.WHITE);
@@ -52,6 +61,7 @@ public class GameWorld {
         hudCamera.update();
 
         camera.position.set(0, 0, 0);
+        camera.zoom = 0.4f;
         viewport = new ExtendViewport(1280, 720, camera);
         shapeDrawer = new ShapeDrawer(spriteBatch, new TextureRegion(texture, 0, 0, 1, 1));
 
@@ -60,9 +70,13 @@ public class GameWorld {
         parameter.size = 25;
         font = generator.generateFont(parameter);
         generator.dispose();
+        level = new Level();
+        level.Load("Test");
+    }
 
-        Level.Load("Test");
-
+    public static void lookAt(float x, float y) {
+        camera.position.set(x, y, 0);
+        clampCamera();
     }
 
     public void update(float delta){
@@ -70,6 +84,22 @@ public class GameWorld {
         for (GameObject entity : gameObjects) {
             entity.run(delta);
         }
+
+        for(GameObject gameObject : removeAfterUpdate) {
+            gameObjects.removeValue(gameObject, true);
+            world.remove(gameObject.item);
+        }
+        removeAfterUpdate.clear();
+
+        for(GameObject gameObject : addAfterUpdate) {
+            gameObjects.add(gameObject);
+            GameWorld.world.add(gameObject.item,
+                    gameObject.x + gameObject.boundingBoxX,
+                    gameObject.y + gameObject.boundingBoxY,
+                    gameObject.boundingBoxWidth,
+                    gameObject.boundingBoxHeight);
+        }
+        addAfterUpdate.clear();
     }
 
     public void draw(float delta){
@@ -87,9 +117,9 @@ public class GameWorld {
             Item<GameObject> item = entity.item;
             if (item != null) {
                 shapeDrawer.setColor(Color.RED);
-                shapeDrawer.setDefaultLineWidth(1.0f);
+                shapeDrawer.setDefaultLineWidth(0.5f);
                 Rect rect = world.getRect(item);
-                shapeDrawer.rectangle(rect.x, rect.y, rect.w, rect.h);
+                //shapeDrawer.rectangle(rect.x, rect.y, rect.w, rect.h);
             }
         }
 
@@ -107,17 +137,11 @@ public class GameWorld {
     }
 
     public static void addGameObjectToWorld(GameObject gameObject){
-        gameObjects.add(gameObject);
-        GameWorld.world.add(gameObject.item,
-                gameObject.x + gameObject.boundingBoxX,
-                gameObject.y + gameObject.boundingBoxY,
-                gameObject.boundingBoxWidth,
-                gameObject.boundingBoxHeight);
+        addAfterUpdate.add(gameObject);
     }
 
     public static void removeGameObjectFromWorld(GameObject gameObject) {
-        gameObjects.removeValue(gameObject, true);
-        world.remove(gameObject.item);
+        removeAfterUpdate.add(gameObject);
     }
 
     public void resize(int width, int height) {
@@ -143,14 +167,11 @@ public class GameWorld {
         if(Gdx.input.isKeyPressed(Input.Keys.E)){
             camera.zoom -= 0.01f;
         }
-
-        clampCamera();
-        camera.update();
     }
 
     public static void clampCamera(){
         // Camera clamping code from https://stackoverflow.com/questions/47644078/clamp-camera-to-map-zoom-issue
-        camera.zoom = MathUtils.clamp(camera.zoom, 0.3f, 1);
+        camera.zoom = MathUtils.clamp(camera.zoom, 0.1f, 1);
 
         float zoomedHalfWorldWidth = camera.zoom * camera.viewportWidth / 2;
         float zoomedHalfWorldHeight = camera.zoom * camera.viewportHeight / 2;
@@ -168,5 +189,7 @@ public class GameWorld {
             camera.position.y = MathUtils.clamp(camera.position.y, minY, maxY);
         else
             camera.position.y = minY;
+
+        camera.update();
     }
 }
