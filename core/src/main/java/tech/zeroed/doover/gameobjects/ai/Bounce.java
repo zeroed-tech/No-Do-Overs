@@ -1,17 +1,15 @@
 package tech.zeroed.doover.gameobjects.ai;
 
-import tech.zeroed.doover.gameobjects.GameObject;
+import tech.zeroed.doover.gameobjects.enemy.Enemy;
 
 public class Bounce extends AI {
 
-
-
-    public Bounce(GameObject target) {
+    public Bounce(Enemy target) {
         super(target);
     }
 
     @Override
-    void update(float delta) {
+    public void update(float delta) {
 
     }
 }

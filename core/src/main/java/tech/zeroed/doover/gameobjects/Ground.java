@@ -6,10 +6,9 @@ import com.dongbat.jbump.Item;
 import tech.zeroed.doover.GameWorld;
 
 public class Ground extends GameObject {
-    public static Array<TextureRegion> sprites = new Array<>();
 
     public Ground(){
-        sprite = sprites.get(2);
+        sprite = GameWorld.worldSprites.findRegion("floor");
         this.boundingBoxWidth = GameWorld.TILE_SIZE;
         this.boundingBoxHeight = GameWorld.TILE_SIZE;
         this.gravityX = 0;

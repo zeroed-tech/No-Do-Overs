@@ -9,6 +9,7 @@ import com.badlogic.gdx.maps.tiled.*;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import tech.zeroed.doover.gameobjects.*;
+import tech.zeroed.doover.gameobjects.enemy.Skull;
 import tech.zeroed.doover.gameobjects.traps.Spikes;
 
 public class Level {
@@ -20,24 +21,6 @@ public class Level {
 
     public void Load(String mapName) {
         TiledMap tilemap = new TmxMapLoader().load("tilemap/"+mapName+".tmx");
-
-        for(TiledMapTileSet tiledMapTiles : tilemap.getTileSets()){
-            for(TiledMapTile tile : tiledMapTiles){
-               switch (tile.getProperties().get("Type", "Unknown", String.class)){
-                   case "Ground":
-                       Ground.sprites.add(tile.getTextureRegion());
-                       break;
-                   case "Crate":
-                       Crate.sprites.add(tile.getTextureRegion());
-                       break;
-                   case "Spikes":
-                       Spikes.sprites.add(tile.getTextureRegion());
-                       break;
-                   default:
-                       break;
-               }
-            }
-        }
 
         // Initialise extra objects that generate their sprites
         // Create blood
@@ -86,6 +69,9 @@ public class Level {
                             break;
                         case "Spikes":
                             toSpawn = new Spikes();
+                            break;
+                        case "Skull":
+                            toSpawn = new Skull();
                             break;
                         default:
                             break;

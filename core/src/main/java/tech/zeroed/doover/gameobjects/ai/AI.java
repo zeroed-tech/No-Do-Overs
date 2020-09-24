@@ -1,13 +1,18 @@
 package tech.zeroed.doover.gameobjects.ai;
 
 import tech.zeroed.doover.gameobjects.GameObject;
+import tech.zeroed.doover.gameobjects.enemy.Enemy;
 
 public abstract class AI {
-    public GameObject target;
+    public Enemy target;
 
-    public AI(GameObject target){
+    public AI(Enemy target){
         this.target = target;
     }
 
-    abstract void update(float delta);
+    public abstract void update(float delta);
+
+    public void debugDraw() {
+
+    }
 }

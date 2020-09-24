@@ -1,14 +1,15 @@
 package tech.zeroed.doover.gameobjects.ai;
 
 import tech.zeroed.doover.gameobjects.GameObject;
+import tech.zeroed.doover.gameobjects.enemy.Enemy;
 
 public class Follow extends AI {
-    public Follow(GameObject target) {
+    public Follow(Enemy target) {
         super(target);
     }
 
     @Override
-    void update(float delta) {
+    public void update(float delta) {
 
     }
 }

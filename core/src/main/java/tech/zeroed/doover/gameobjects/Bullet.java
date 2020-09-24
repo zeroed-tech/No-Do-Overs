@@ -5,7 +5,9 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.dongbat.jbump.*;
+import tech.zeroed.doover.Colliders;
 import tech.zeroed.doover.GameWorld;
+import tech.zeroed.doover.gameobjects.enemy.Enemy;
 
 public class Bullet extends GameObject {
     public static Array<TextureRegion> sprites = new Array<>();
@@ -41,13 +43,14 @@ public class Bullet extends GameObject {
 
             Response.Result result = GameWorld.world.move(item, x + boundingBoxX, y + boundingBoxY, BULLET_COLLISION_FILTER);
             if(result.projectedCollisions.size() > 0){
-                for(Item item : result.projectedCollisions.others){
-                    if(item.userData instanceof Ground){
-                        GameWorld.removeGameObjectFromWorld(this);
-                        dead = true;
-                        return;
-                    }
+                Item item = result.projectedCollisions.others.get(0);
+                GameWorld.removeGameObjectFromWorld(this);
+                dead = true;
+                if(item.userData instanceof Enemy){
+                    ((Enemy) item.userData).kill();;
                 }
+                // No point updating the bullet if we just destroyed it
+                return;
             }
 
             // Update position based on collision results
@@ -69,8 +72,8 @@ public class Bullet extends GameObject {
     public static class BulletCollisionFilter implements CollisionFilter{
         @Override
         public Response filter(Item item, Item other) {
-            if(other.userData instanceof Ground){
-                return Response.slide;
+            if(other.userData instanceof Ground || other.userData instanceof Enemy){
+                return Response.cross;
             }
             return null;
         }

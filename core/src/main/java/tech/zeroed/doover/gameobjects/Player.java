@@ -3,7 +3,6 @@ package tech.zeroed.doover.gameobjects;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.g2d.Animation;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
 import com.badlogic.gdx.math.MathUtils;
@@ -17,6 +16,11 @@ import static tech.zeroed.doover.GameWorld.*;
 public class Player extends GameObject{
 
     public static PlayerCollisionFilter PLAYER_COLLISION_FILTER = new PlayerCollisionFilter();
+
+    public Animation<TextureAtlas.AtlasRegion> idle_animation;
+    public Animation<TextureAtlas.AtlasRegion> run_animation;
+    public Animation<TextureAtlas.AtlasRegion> jump_animation;
+
 
     // Player constants
     public static float ACCELERATION = 1800f;
@@ -37,12 +41,15 @@ public class Player extends GameObject{
     private float gunReloadDelay = 0;
 
     public Player(){
-        animation = new Animation<>(1 / 30f, worldSprites.findRegions("Player"), Animation.PlayMode.LOOP);
+        idle_animation = new Animation<>(1 / 10f, worldSprites.findRegions("knight_m_idle_anim"), Animation.PlayMode.LOOP);
+        run_animation = new Animation<>(1 / 10f, worldSprites.findRegions("knight_m_run_anim"), Animation.PlayMode.LOOP);
+        jump_animation = new Animation<>(1 / 10f, worldSprites.findRegions("knight_m_hit_anim"), Animation.PlayMode.LOOP);
+        animation = idle_animation;
         sprite = worldSprites.findRegion("Gun");
         animationTime = 1;
-        this.boundingBoxWidth = 10;
-        this.boundingBoxHeight = 19;
-        this.boundingBoxX = 3;
+        this.boundingBoxWidth = 9;
+        this.boundingBoxHeight = 14;
+        this.boundingBoxX = 4;
         this.boundingBoxY = 0;
         this.gravityX = 0;
         this.gravityY = -GRAVITY;
@@ -52,26 +59,16 @@ public class Player extends GameObject{
 
     public void kill(){
         if(dead) return;
-        dead = true;
-        GameWorld.removeGameObjectFromWorld(this);
-
-        for(int i = 0; i < 100; i++){
-            BloodParticle particle = new BloodParticle();
-            particle.x = MathUtils.random(x, x+boundingBoxWidth);
-            particle.y = MathUtils.random(y, y+boundingBoxHeight);;
-            particle.deltaX = MathUtils.random(-20, 20);
-            particle.deltaY = MathUtils.random(100, 250);
-            addGameObjectToWorld(particle);
-        }
+        super.kill();
 
         level.spawnPlayer();
     }
 
     @Override
     public void run(float delta) {
+        super.run(delta);
         if(dead) return;
 
-        animationTime += delta;
         gunReloadDelay -= delta;
         if(gunReloadDelay < 0)
             gunReloadDelay = 0;
@@ -103,12 +100,16 @@ public class Player extends GameObject{
 
             float moveAmount = ACCELERATION * delta * (flipX ? -1 : 1);
             deltaX = MathUtils.clamp(deltaX + moveAmount, -RUN_SPEED, RUN_SPEED);
+
+            animation = run_animation;
         }else{
             // Decelerate
             if(deltaX > 0){
                 deltaX = MathUtils.clamp(deltaX - (ACCELERATION * (jumping ? 0.5f : 1)) * delta, 0, RUN_SPEED);
             }else if(deltaX < 0){
                 deltaX = MathUtils.clamp(deltaX + (ACCELERATION * (jumping ? 0.5f : 1)) * delta, -RUN_SPEED, 0);
+            }else{
+                animation = idle_animation;
             }
         }
 
@@ -140,7 +141,7 @@ public class Player extends GameObject{
                     }else{
                         bullet.x = x + boundingBoxWidth * 2;
                     }
-                    bullet.y = y + boundingBoxHeight/2-2;
+                    bullet.y = y + boundingBoxHeight/2-3;
                 }
                 GameWorld.addGameObjectToWorld(bullet);
             }
@@ -211,22 +212,22 @@ public class Player extends GameObject{
     public void draw(SpriteBatch batch) {
         TextureAtlas.AtlasRegion region = animation.getKeyFrame(animationTime);
         batch.draw(region, x, y, region.getRegionWidth() / 2f, region.getRegionHeight() / 2f, region.getRegionWidth(), region.getRegionHeight(), flipX ? -1 : 1, flipY ? -1 : 1, rotation);
-        batch.draw(sprite, x+(region.getRegionWidth()/2f * (flipX ? -1 : 1)), y+boundingBoxHeight/8, sprite.getRegionWidth() / 2f, sprite.getRegionHeight() / 2f, sprite.getRegionWidth(), sprite.getRegionHeight(), flipX ? -1 : 1, flipY ? -1 : 1, MathUtils.clamp(360*(gunReloadDelay/SHOTGUN_RELOAD_RATE), 0, 360));
+        batch.draw(sprite, x+(region.getRegionWidth()/2f * (flipX ? -1 : 1)), y+2, sprite.getRegionWidth() / 2f, sprite.getRegionHeight() / 2f, sprite.getRegionWidth(), sprite.getRegionHeight(), flipX ? -1 : 1, flipY ? -1 : 1, MathUtils.clamp(360*(gunReloadDelay/SHOTGUN_RELOAD_RATE), 0, 360));
     }
 
     @Override
-    public void debugDraw(SpriteBatch batch, BitmapFont font) {
-        super.debugDraw(batch, font);
-        font.draw(batch, Stringf.format(
-                         "Jumping:   %s\n" +
-                         "In Air:    %s\n" +
-                         "X:                %.2f\n" +
-                         "Y:                %.2f\n" +
-                         "deltaX:       %.2f\n" +
-                         "deltaY:       %.2f\n" +
-                         "Gun Reload:   %.2f\n"
-                , jumping, inAir, x, y, deltaX, deltaY, gunReloadDelay),
-                -hudCamera.viewportWidth/2+10,  hudCamera.viewportHeight/2-10 - font.getLineHeight());
+    public void debugDraw() {
+        super.debugDraw();
+//        font.draw(GameWorld.spriteBatch, Stringf.format(
+//                         "Jumping:   %s\n" +
+//                         "In Air:    %s\n" +
+//                         "X:                %.2f\n" +
+//                         "Y:                %.2f\n" +
+//                         "deltaX:       %.2f\n" +
+//                         "deltaY:       %.2f\n" +
+//                         "Gun Reload:   %.2f\n"
+//                , jumping, inAir, x, y, deltaX, deltaY, gunReloadDelay),
+//                -hudCamera.viewportWidth/2+10,  hudCamera.viewportHeight/2-10 - font.getLineHeight());
     }
 
     public static class PlayerCollisionFilter implements CollisionFilter{

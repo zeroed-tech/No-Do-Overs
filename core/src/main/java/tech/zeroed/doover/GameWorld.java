@@ -87,7 +87,11 @@ public class GameWorld {
 
         for(GameObject gameObject : removeAfterUpdate) {
             gameObjects.removeValue(gameObject, true);
-            world.remove(gameObject.item);
+            try {
+                world.remove(gameObject.item);
+            }catch (Exception c){
+                System.nanoTime();
+            }
         }
         removeAfterUpdate.clear();
 
@@ -123,15 +127,15 @@ public class GameWorld {
             }
         }
 
-        spriteBatch.setProjectionMatrix(hudCamera.combined);
-        font.draw(spriteBatch, "Camera: X: "+(int)camera.position.x+" Y: "+(int)camera.position.y+" Zoom: "+camera.zoom+"", -hudCamera.viewportWidth/2+10, hudCamera.viewportHeight/2-10);
-
         for (GameObject entity : gameObjects) {
             Item<GameObject> item = entity.item;
             if (item != null) {
-                entity.debugDraw(spriteBatch, font);
+                //entity.debugDraw();
             }
         }
+
+        spriteBatch.setProjectionMatrix(hudCamera.combined);
+        font.draw(spriteBatch, "Camera: X: "+(int)camera.position.x+" Y: "+(int)camera.position.y+" Zoom: "+camera.zoom+"", -hudCamera.viewportWidth/2+10, hudCamera.viewportHeight/2-10);
 
         spriteBatch.end();
     }
