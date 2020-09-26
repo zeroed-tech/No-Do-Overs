@@ -2,12 +2,6 @@ package tech.zeroed.doover.gameobjects.enemy;
 
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
-import com.dongbat.jbump.Item;
-import com.dongbat.jbump.Rect;
-import com.dongbat.jbump.Response;
-import tech.zeroed.doover.Colliders;
-import tech.zeroed.doover.GameWorld;
-import tech.zeroed.doover.gameobjects.GameObject;
 import tech.zeroed.doover.gameobjects.ai.Patrol;
 
 import static tech.zeroed.doover.GameWorld.worldSprites;
@@ -33,28 +27,7 @@ public class Skull extends Enemy {
         this.moveSpeedX = 30;
         this.moveSpeedY = 0;
 
-        ai = new Patrol(this);
-    }
-    
-    @Override
-    public void run(float delta) {
-        super.run(delta);
-        ai.update(delta);
-
-        deltaY += gravityY * delta;
-
-        x += deltaX * delta;
-        y += deltaY * delta;
-
-        // Check and handle collisions
-        GameWorld.world.move(item, x + boundingBoxX, y + boundingBoxY, Colliders.GROUND_COLLISION_FILTER);
-
-        // Update position based on collision results
-        Rect rect = GameWorld.world.getRect(item);
-        if(rect != null) {
-            x = rect.x - boundingBoxX;
-            y = rect.y - boundingBoxY;
-        }
+        ai = new Patrol(this, false);
     }
 
     @Override

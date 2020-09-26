@@ -2,6 +2,7 @@ package tech.zeroed.doover.gameobjects;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.g2d.Animation;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureAtlas;
@@ -21,6 +22,8 @@ public class Player extends GameObject{
     public Animation<TextureAtlas.AtlasRegion> run_animation;
     public Animation<TextureAtlas.AtlasRegion> jump_animation;
 
+    private Sound gunFire;
+    private Sound gunReload;
 
     // Player constants
     public static float ACCELERATION = 1800f;
@@ -39,11 +42,17 @@ public class Player extends GameObject{
     private Collisions projectedCollisions = new Collisions();
 
     private float gunReloadDelay = 0;
+    private boolean reloading = false;
+    private boolean playedReloadingSound = false;
 
     public Player(){
         idle_animation = new Animation<>(1 / 10f, worldSprites.findRegions("knight_m_idle_anim"), Animation.PlayMode.LOOP);
-        run_animation = new Animation<>(1 / 10f, worldSprites.findRegions("knight_m_run_anim"), Animation.PlayMode.LOOP);
+        run_animation  = new Animation<>(1 / 10f, worldSprites.findRegions("knight_m_run_anim"), Animation.PlayMode.LOOP);
         jump_animation = new Animation<>(1 / 10f, worldSprites.findRegions("knight_m_hit_anim"), Animation.PlayMode.LOOP);
+
+        gunFire = Gdx.audio.newSound(Gdx.files.internal("Sounds/Shotgun.mp3"));
+        gunReload = Gdx.audio.newSound(Gdx.files.internal("Sounds/Reload.mp3"));
+
         animation = idle_animation;
         sprite = worldSprites.findRegion("Gun");
         animationTime = 1;
@@ -64,14 +73,58 @@ public class Player extends GameObject{
         level.spawnPlayer();
     }
 
+    public void shoot(boolean up, boolean down){
+        gunFire.play(1, MathUtils.random(0.85f, 1.15f), 0);
+
+        // Shooting
+        for(int i = 0; i < 9; i++){
+            Bullet bullet = new Bullet(MathUtils.random(0.25f, 0.4f));
+            if(down || up){
+                bullet.deltaX = MathUtils.random(-30, 30);
+                bullet.deltaY = MathUtils.random(300, 350) * (down ? -1 : 1);
+                bullet.x = x + boundingBoxWidth/2;
+                bullet.y = y + boundingBoxHeight/2;
+            }else{
+                bullet.deltaX = MathUtils.random(400, 450) * (flipX ? -1 : 1);
+                bullet.deltaY = MathUtils.random(-30, 30);
+                if(flipX) {
+                    bullet.x = x - boundingBoxWidth;
+                }else{
+                    bullet.x = x + boundingBoxWidth * 2;
+                }
+                bullet.y = y + boundingBoxHeight/2-3;
+            }
+            GameWorld.addGameObjectToWorld(bullet);
+        }
+
+        // Knock back
+        if(down || up){
+            deltaY = SHOTGUN_KNOCK_BACK * (up ? -1 : 1);
+        }else {
+            deltaX -= (SHOTGUN_KNOCK_BACK * (flipX ? -1 : 1)) * (inAir ? 1 : 0) ;
+        }
+
+        gunReloadDelay = SHOTGUN_RELOAD_RATE;
+        reloading = true;
+        playedReloadingSound = false;
+    }
+
     @Override
     public void run(float delta) {
         super.run(delta);
         if(dead) return;
 
-        gunReloadDelay -= delta;
-        if(gunReloadDelay < 0)
-            gunReloadDelay = 0;
+        if(reloading) {
+            gunReloadDelay -= delta;
+            if(!playedReloadingSound && gunReloadDelay < 0.3f){
+                playedReloadingSound = true;
+                gunReload.play(1, MathUtils.random(0.8f, 1.1f), 1);
+            }
+            if (gunReloadDelay < 0) {
+                gunReloadDelay = 0;
+                reloading = false;
+            }
+        }
 
         boolean left  = Gdx.input.isKeyPressed(Input.Keys.LEFT);
         boolean right = Gdx.input.isKeyPressed(Input.Keys.RIGHT);
@@ -125,35 +178,7 @@ public class Player extends GameObject{
         }
 
         if(shoot && gunReloadDelay <= 0){
-            // Shooting
-            for(int i = 0; i < 9; i++){
-                Bullet bullet = new Bullet(MathUtils.random(0.25f, 0.4f));
-                if(down || up){
-                    bullet.deltaX = MathUtils.random(-30, 30);
-                    bullet.deltaY = MathUtils.random(300, 350) * (down ? -1 : 1);
-                    bullet.x = x + boundingBoxWidth/2;
-                    bullet.y = y + boundingBoxHeight/2;
-                }else{
-                    bullet.deltaX = MathUtils.random(400, 450) * (flipX ? -1 : 1);
-                    bullet.deltaY = MathUtils.random(-30, 30);
-                    if(flipX) {
-                        bullet.x = x - boundingBoxWidth;
-                    }else{
-                        bullet.x = x + boundingBoxWidth * 2;
-                    }
-                    bullet.y = y + boundingBoxHeight/2-3;
-                }
-                GameWorld.addGameObjectToWorld(bullet);
-            }
-
-            // Knock back
-            if(down || up){
-                deltaY = SHOTGUN_KNOCK_BACK * (up ? -1 : 1);
-            }else {
-                deltaX -= (SHOTGUN_KNOCK_BACK * (flipX ? -1 : 1)) * (inAir ? 1 : 0) ;
-            }
-
-            gunReloadDelay = SHOTGUN_RELOAD_RATE;
+            shoot(up, down);
         }
 
         // Update physics for this object

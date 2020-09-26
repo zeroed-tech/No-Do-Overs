@@ -71,7 +71,7 @@ public class GameWorld {
         font = generator.generateFont(parameter);
         generator.dispose();
         level = new Level();
-        level.Load("Test");
+        level.Load("BossRoom");
     }
 
     public static void lookAt(float x, float y) {
@@ -109,6 +109,8 @@ public class GameWorld {
     public void draw(float delta){
         viewport.apply();
 
+        level.draw(delta);
+
         spriteBatch.setProjectionMatrix(camera.combined);
         spriteBatch.begin();
 
@@ -123,14 +125,14 @@ public class GameWorld {
                 shapeDrawer.setColor(Color.RED);
                 shapeDrawer.setDefaultLineWidth(0.5f);
                 Rect rect = world.getRect(item);
-                //shapeDrawer.rectangle(rect.x, rect.y, rect.w, rect.h);
+                shapeDrawer.rectangle(rect.x, rect.y, rect.w, rect.h);
             }
         }
 
         for (GameObject entity : gameObjects) {
             Item<GameObject> item = entity.item;
             if (item != null) {
-                //entity.debugDraw();
+                entity.debugDraw();
             }
         }
 
@@ -182,11 +184,11 @@ public class GameWorld {
 
         //min and max values for camera's x coordinate
         float minX = zoomedHalfWorldWidth;
-        float maxX = Level.TILE_WIDTH*TILE_SIZE - zoomedHalfWorldWidth;
+        float maxX = Level.CURRENT_LEVEL_WIDTH_TILES*TILE_SIZE - zoomedHalfWorldWidth;
 
         //min and max values for camera's y coordinate
         float minY = zoomedHalfWorldHeight;
-        float maxY = Level.TILE_HEIGHT*TILE_SIZE - zoomedHalfWorldHeight;
+        float maxY = Level.CURRENT_LEVEL_HEIGHT_TILES*TILE_SIZE - zoomedHalfWorldHeight;
 
         camera.position.x = MathUtils.clamp(camera.position.x, minX, maxX);
         if(minY < maxY)
